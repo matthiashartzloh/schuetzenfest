@@ -112,7 +112,7 @@
     var chartHeight = height - paddingTop - paddingBottom;
 
     if (data.length === 0) {
-      ctx.fillStyle = "#8a8a8a";
+      ctx.fillStyle = "#a89a7c";
       ctx.font = "600 " + Math.max(16, height * 0.06) + "px Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -125,7 +125,7 @@
     var niceMax = Math.ceil(maxValue * 1.2);
 
     // Achsen
-    ctx.strokeStyle = "#2fbf6e";
+    ctx.strokeStyle = "#dda637";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(paddingLeft, paddingTop);
@@ -134,7 +134,7 @@
     ctx.stroke();
 
     // Y-Achsen Beschriftung (0, Mitte, Max)
-    ctx.fillStyle = "#8a8a8a";
+    ctx.fillStyle = "#a89a7c";
     ctx.font = "600 " + Math.max(12, height * 0.035) + "px Arial";
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
@@ -154,20 +154,23 @@
       var y = paddingTop + chartHeight - barHeight;
 
       var gradient = ctx.createLinearGradient(0, y, 0, paddingTop + chartHeight);
-      gradient.addColorStop(0, "#2fbf6e");
-      gradient.addColorStop(1, "#0f5c30");
+      gradient.addColorStop(0, "#1c7a49");
+      gradient.addColorStop(1, "#0a3d23");
       ctx.fillStyle = gradient;
       ctx.fillRect(x, y, barWidth, barHeight);
+      ctx.strokeStyle = "#dda637";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x, y, barWidth, barHeight);
 
       // Wert ueber dem Balken
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = "#f0c169";
       ctx.font = "700 " + Math.max(13, height * 0.04) + "px Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";
       ctx.fillText(String(value), x + barWidth / 2, y - 6);
 
       // X-Achsen Beschriftung
-      ctx.fillStyle = "#8a8a8a";
+      ctx.fillStyle = "#a89a7c";
       ctx.font = "600 " + Math.max(12, height * 0.032) + "px Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";

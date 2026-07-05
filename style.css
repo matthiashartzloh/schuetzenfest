@@ -1,11 +1,14 @@
 :root {
-  --color-green: #1e8f4e;
-  --color-green-dark: #0f5c30;
-  --color-green-light: #2fbf6e;
+  --color-green: #0f5c34;
+  --color-green-dark: #0a3d23;
+  --color-green-light: #1c7a49;
+  --color-gold: #dda637;
+  --color-gold-light: #f0c169;
+  --color-cream: #f6dfae;
   --color-black: #0a0a0a;
-  --color-black-soft: #151515;
+  --color-black-soft: #161512;
   --color-white: #ffffff;
-  --color-grey: #8a8a8a;
+  --color-grey: #a89a7c;
 }
 
 * {
@@ -28,24 +31,34 @@ html, body {
   gap: clamp(1rem, 3vw, 2.5rem);
   padding: clamp(1rem, 3vw, 2rem) clamp(1.5rem, 5vw, 4rem);
   background: linear-gradient(180deg, var(--color-black-soft) 0%, var(--color-black) 100%);
-  border-bottom: 4px solid var(--color-green);
+  border-bottom: 4px solid var(--color-gold);
 }
 
-.logo-placeholder,
 .logo {
   flex-shrink: 0;
-  width: clamp(60px, 8vw, 110px);
-  height: clamp(60px, 8vw, 110px);
-  border: 3px dashed var(--color-green);
-  border-radius: 12px;
+  width: clamp(70px, 9vw, 120px);
+  height: clamp(70px, 9vw, 120px);
+  object-fit: contain;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.5));
+}
+
+.logo-placeholder[hidden] {
+  display: none;
+}
+
+.logo-placeholder {
+  flex-shrink: 0;
+  width: clamp(70px, 9vw, 120px);
+  height: clamp(70px, 9vw, 120px);
+  border: 3px dashed var(--color-gold);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: clamp(0.9rem, 1.5vw, 1.2rem);
   font-weight: 700;
-  color: var(--color-green-light);
+  color: var(--color-gold);
   letter-spacing: 0.1em;
-  object-fit: contain;
   background: var(--color-black);
 }
 
@@ -60,7 +73,7 @@ html, body {
 .subtitle {
   margin: 0.25rem 0 0;
   font-size: clamp(1rem, 2vw, 1.5rem);
-  color: var(--color-green-light);
+  color: var(--color-gold-light);
   font-weight: 600;
 }
 
@@ -94,9 +107,9 @@ html, body {
   margin: 0.25rem 0;
   font-size: clamp(5rem, 18vw, 12rem);
   font-weight: 900;
-  color: var(--color-green-light);
+  color: var(--color-gold-light);
   line-height: 1;
-  text-shadow: 0 0 40px rgba(47, 191, 110, 0.35);
+  text-shadow: 0 0 40px rgba(221, 166, 55, 0.35);
 }
 
 .last-drink {
@@ -131,12 +144,14 @@ html, body {
   max-width: 900px;
   padding: clamp(1.5rem, 5vw, 3rem);
   font-size: clamp(2rem, 6vw, 4.5rem);
+  color: var(--color-cream);
+  border: 3px solid var(--color-gold);
   background: linear-gradient(180deg, var(--color-green-light) 0%, var(--color-green) 60%, var(--color-green-dark) 100%);
   box-shadow: 0 8px 0 var(--color-green-dark), 0 12px 30px rgba(0, 0, 0, 0.5);
 }
 
 .btn-primary:hover {
-  filter: brightness(1.08);
+  filter: brightness(1.1);
 }
 
 .btn-primary:active {
@@ -160,8 +175,8 @@ html, body {
 
 .btn-minus {
   background: var(--color-black-soft);
-  border: 2px solid var(--color-green);
-  color: var(--color-green-light);
+  border: 2px solid var(--color-gold);
+  color: var(--color-gold-light);
 }
 
 .btn-reset {
@@ -187,7 +202,7 @@ html, body {
   margin: 0 0 1rem;
   font-size: clamp(1.1rem, 2.2vw, 1.8rem);
   font-weight: 700;
-  color: var(--color-white);
+  color: var(--color-gold-light);
   text-align: center;
 }
 
@@ -214,7 +229,7 @@ html, body {
 
 .modal {
   background: var(--color-black-soft);
-  border: 2px solid var(--color-green);
+  border: 2px solid var(--color-gold);
   border-radius: 20px;
   padding: clamp(1.5rem, 4vw, 2.5rem);
   max-width: 480px;
