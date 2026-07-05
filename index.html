@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. Kompanie Bahnhofstraße – Jagdhund-Zähler</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="header">
+    <!-- Logo-Platzhalter: Datei "logo.png" neben index.html legen und die
+         Zeile unten von <div class="logo-placeholder"> auf
+         <img class="logo" src="logo.png" alt="Logo"> umstellen -->
+    <div class="logo-placeholder" id="logo">LOGO</div>
+    <div class="header-text">
+      <h1>4. Kompanie Bahnhofstraße</h1>
+      <p class="subtitle">Jagdhund-Zähler</p>
+    </div>
+  </header>
+
+  <main class="dashboard">
+
+    <section class="counter-card">
+      <p class="counter-label">Getrunkene Jagdhunde</p>
+      <p class="counter-value" id="counterValue">0</p>
+      <p class="last-drink" id="lastDrink">Letzter Jagdhund: –</p>
+    </section>
+
+    <section class="actions">
+      <button class="btn btn-primary" id="incrementBtn">Jagdhund +1</button>
+      <div class="actions-secondary">
+        <button class="btn btn-minus" id="decrementBtn">-1</button>
+        <button class="btn btn-reset" id="resetBtn">Zurücksetzen</button>
+      </div>
+    </section>
+
+    <section class="chart-card">
+      <p class="chart-title">Verlauf</p>
+      <canvas id="chart" class="chart-canvas"></canvas>
+    </section>
+
+  </main>
+
+  <div class="modal-overlay" id="confirmOverlay">
+    <div class="modal">
+      <p>Zähler wirklich auf 0 zurücksetzen?</p>
+      <div class="modal-actions">
+        <button class="btn btn-reset" id="confirmResetBtn">Ja, zurücksetzen</button>
+        <button class="btn btn-cancel" id="cancelResetBtn">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
