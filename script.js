@@ -14,6 +14,8 @@
   var cancelResetBtn = document.getElementById("cancelResetBtn");
   var chartCanvas = document.getElementById("chart");
   var ctx = chartCanvas.getContext("2d");
+  var locomotivePopup = document.getElementById("locomotivePopup");
+  var locomotivePopupCount = document.getElementById("locomotivePopupCount");
 
   var count = 0;
   var clicks = []; // Array von Timestamps (ms seit Epoch)
@@ -204,36 +206,76 @@
     return buffer;
   }
 
+  // Jeder "Wuff" besteht aus zwei Schichten: einem tonalen Koerper
+  // (Saegezahn mit fallender Tonhoehe durch einen Tiefpass) fuer das
+  // eigentliche "Woof" und einem kurzen Rauschimpuls fuer den harten
+  // Anschlag am Anfang. Das klingt deutlich echter als reines Rauschen.
+  function playSingleBark(ac, start) {
+    var duration = 0.17 + Math.random() * 0.02;
+    var startFreq = 300 + Math.random() * 40;
+    var endFreq = 90 + Math.random() * 15;
+
+    var osc = ac.createOscillator();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(startFreq, start);
+    osc.frequency.exponentialRampToValueAtTime(endFreq, start + duration);
+
+    var lowpass = ac.createBiquadFilter();
+    lowpass.type = "lowpass";
+    lowpass.Q.value = 3;
+    lowpass.frequency.setValueAtTime(2200, start);
+    lowpass.frequency.exponentialRampToValueAtTime(350, start + duration);
+
+    var oscGain = ac.createGain();
+    oscGain.gain.setValueAtTime(0.0001, start);
+    oscGain.gain.exponentialRampToValueAtTime(0.85, start + 0.012);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    osc.connect(lowpass);
+    lowpass.connect(oscGain);
+    oscGain.connect(ac.destination);
+    osc.start(start);
+    osc.stop(start + duration + 0.02);
+
+    var snapDuration = 0.025;
+    var noise = ac.createBufferSource();
+    noise.buffer = createNoiseBuffer(ac, snapDuration);
+
+    var bandpass = ac.createBiquadFilter();
+    bandpass.type = "bandpass";
+    bandpass.frequency.value = 1600;
+    bandpass.Q.value = 0.7;
+
+    var noiseGain = ac.createGain();
+    noiseGain.gain.setValueAtTime(0.0001, start);
+    noiseGain.gain.exponentialRampToValueAtTime(0.4, start + 0.004);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, start + snapDuration);
+
+    noise.connect(bandpass);
+    bandpass.connect(noiseGain);
+    noiseGain.connect(ac.destination);
+    noise.start(start);
+    noise.stop(start + snapDuration + 0.01);
+  }
+
   function playBarkSound() {
     var ac = getAudioContext();
     var now = ac.currentTime;
-    var barkOffsets = [0, 0.16, 0.32];
-
-    barkOffsets.forEach(function (offset) {
-      var start = now + offset;
-      var duration = 0.13;
-
-      var noise = ac.createBufferSource();
-      noise.buffer = createNoiseBuffer(ac, duration);
-
-      var bandpass = ac.createBiquadFilter();
-      bandpass.type = "bandpass";
-      bandpass.Q.value = 1.2;
-      bandpass.frequency.setValueAtTime(700, start);
-      bandpass.frequency.exponentialRampToValueAtTime(250, start + duration);
-
-      var gain = ac.createGain();
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.9, start + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-
-      noise.connect(bandpass);
-      bandpass.connect(gain);
-      gain.connect(ac.destination);
-
-      noise.start(start);
-      noise.stop(start + duration + 0.02);
+    [0, 0.24].forEach(function (offset) {
+      playSingleBark(ac, now + offset);
     });
+  }
+
+  var locomotivePopupTimer = null;
+
+  function showLocomotivePopup(currentCount) {
+    locomotivePopupCount.textContent = String(currentCount);
+    locomotivePopup.classList.add("show");
+
+    if (locomotivePopupTimer) clearTimeout(locomotivePopupTimer);
+    locomotivePopupTimer = setTimeout(function () {
+      locomotivePopup.classList.remove("show");
+    }, 2800);
   }
 
   function increment() {
@@ -241,6 +283,10 @@
     clicks.push(Date.now());
     saveState();
     render();
+
+    if (count % LOCOMOTIVE_INTERVAL === 0) {
+      showLocomotivePopup(count);
+    }
 
     if (count % BARK_INTERVAL === 0) {
       playBarkSound();

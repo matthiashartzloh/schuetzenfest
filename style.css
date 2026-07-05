@@ -212,6 +212,42 @@ html, body {
   display: block;
 }
 
+.locomotive-popup {
+  position: fixed;
+  top: 12%;
+  left: 50%;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  padding: clamp(1rem, 2.5vw, 1.75rem) clamp(1.5rem, 4vw, 3rem);
+  background: linear-gradient(180deg, var(--color-green-light) 0%, var(--color-green) 60%, var(--color-green-dark) 100%);
+  border: 3px solid var(--color-gold);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -30px) scale(0.9);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.locomotive-popup.show {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.locomotive-popup-emoji {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1;
+}
+
+.locomotive-popup-text {
+  font-size: clamp(1.4rem, 3.5vw, 2.5rem);
+  font-weight: 800;
+  color: var(--color-cream);
+  white-space: nowrap;
+}
+
 .modal-overlay {
   display: none;
   position: fixed;
