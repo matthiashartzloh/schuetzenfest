@@ -208,7 +208,7 @@ html, body {
 
 .chart-canvas {
   width: 100%;
-  height: clamp(220px, 35vh, 420px);
+  height: clamp(260px, 35vh, 420px);
   display: block;
 }
 

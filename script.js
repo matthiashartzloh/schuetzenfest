@@ -58,35 +58,12 @@
     drawChart();
   }
 
-  // Gruppiert die Klick-Zeitstempel stundenweise, damit der Verlauf
-  // ueber einen ganzen Abend hinweg auf dem Fernseher lesbar bleibt.
-  function buildHourlyBuckets() {
-    if (clicks.length === 0) return { labels: [], data: [] };
+  var LOCOMOTIVE_INTERVAL = 10;
+  var BARK_INTERVAL = 25;
 
-    var buckets = {};
-    clicks.forEach(function (ts) {
-      var d = new Date(ts);
-      var key = d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate() + "-" + d.getHours();
-      buckets[key] = (buckets[key] || 0) + 1;
-    });
-
-    var first = new Date(clicks[0]);
-    var last = new Date(clicks[clicks.length - 1]);
-    first.setMinutes(0, 0, 0);
-    last.setMinutes(0, 0, 0);
-
-    var labels = [];
-    var data = [];
-    var cursor = new Date(first);
-
-    while (cursor <= last) {
-      var key = cursor.getFullYear() + "-" + cursor.getMonth() + "-" + cursor.getDate() + "-" + cursor.getHours();
-      labels.push(String(cursor.getHours()).padStart(2, "0") + ":00");
-      data.push(buckets[key] || 0);
-      cursor.setHours(cursor.getHours() + 1);
-    }
-
-    return { labels: labels, data: data };
+  function formatHourMinute(ts) {
+    var d = new Date(ts);
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
   }
 
   function drawChart() {
@@ -100,18 +77,7 @@
     var height = rect.height;
     ctx.clearRect(0, 0, width, height);
 
-    var bucket = buildHourlyBuckets();
-    var labels = bucket.labels;
-    var data = bucket.data;
-
-    var paddingLeft = 48;
-    var paddingRight = 20;
-    var paddingTop = 20;
-    var paddingBottom = 40;
-    var chartWidth = width - paddingLeft - paddingRight;
-    var chartHeight = height - paddingTop - paddingBottom;
-
-    if (data.length === 0) {
+    if (clicks.length === 0) {
       ctx.fillStyle = "#a89a7c";
       ctx.font = "600 " + Math.max(16, height * 0.06) + "px Arial";
       ctx.textAlign = "center";
@@ -120,9 +86,31 @@
       return;
     }
 
-    var maxValue = Math.max.apply(null, data);
-    if (maxValue < 1) maxValue = 1;
-    var niceMax = Math.ceil(maxValue * 1.2);
+    // Punkte des Verlaufs: (Uhrzeit, kumulierter Stand)
+    var points = clicks.map(function (ts, i) {
+      return { t: ts, c: i + 1 };
+    });
+
+    var tMin = points[0].t;
+    var tMax = points[points.length - 1].t;
+    if (tMax === tMin) tMax = tMin + 60000;
+
+    var maxCount = points[points.length - 1].c;
+    var niceMax = Math.max(LOCOMOTIVE_INTERVAL, Math.ceil(maxCount * 1.25));
+
+    var paddingLeft = 52;
+    var paddingRight = 24;
+    var paddingTop = 56;
+    var paddingBottom = 44;
+    var chartWidth = width - paddingLeft - paddingRight;
+    var chartHeight = height - paddingTop - paddingBottom;
+
+    function xForTime(t) {
+      return paddingLeft + ((t - tMin) / (tMax - tMin)) * chartWidth;
+    }
+    function yForCount(c) {
+      return paddingTop + chartHeight - (c / niceMax) * chartHeight;
+    }
 
     // Achsen
     ctx.strokeStyle = "#dda637";
@@ -144,37 +132,107 @@
       ctx.fillText(String(value), paddingLeft - 10, y);
     });
 
-    // Balken
-    var barSlot = chartWidth / data.length;
-    var barWidth = Math.min(barSlot * 0.6, 90);
+    // X-Achsen Beschriftung: Uhrzeit
+    var tickCount = Math.min(6, points.length);
+    tickCount = Math.max(tickCount, 2);
+    ctx.fillStyle = "#a89a7c";
+    ctx.font = "600 " + Math.max(12, height * 0.032) + "px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    for (var i = 0; i < tickCount; i++) {
+      var t = tMin + ((tMax - tMin) * i) / (tickCount - 1);
+      var x = xForTime(t);
+      ctx.fillText(formatHourMinute(t), x, paddingTop + chartHeight + 8);
+    }
 
-    data.forEach(function (value, i) {
-      var barHeight = (value / niceMax) * chartHeight;
-      var x = paddingLeft + i * barSlot + (barSlot - barWidth) / 2;
-      var y = paddingTop + chartHeight - barHeight;
+    // Verlaufslinie
+    ctx.strokeStyle = "#f0c169";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    points.forEach(function (p, idx) {
+      var x = xForTime(p.t);
+      var y = yForCount(p.c);
+      if (idx === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
 
-      var gradient = ctx.createLinearGradient(0, y, 0, paddingTop + chartHeight);
-      gradient.addColorStop(0, "#1c7a49");
-      gradient.addColorStop(1, "#0a3d23");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(x, y, barWidth, barHeight);
-      ctx.strokeStyle = "#dda637";
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(x, y, barWidth, barHeight);
+    // Punkte + Lokomotive bei jedem 10er-Schritt
+    points.forEach(function (p) {
+      var x = xForTime(p.t);
+      var y = yForCount(p.c);
 
-      // Wert ueber dem Balken
-      ctx.fillStyle = "#f0c169";
-      ctx.font = "700 " + Math.max(13, height * 0.04) + "px Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      ctx.fillText(String(value), x + barWidth / 2, y - 6);
+      ctx.fillStyle = "#1c7a49";
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
 
-      // X-Achsen Beschriftung
-      ctx.fillStyle = "#a89a7c";
-      ctx.font = "600 " + Math.max(12, height * 0.032) + "px Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      ctx.fillText(labels[i], x + barWidth / 2, paddingTop + chartHeight + 8);
+      if (p.c % LOCOMOTIVE_INTERVAL === 0) {
+        var emojiSize = Math.max(20, height * 0.08);
+        ctx.font = emojiSize + "px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.fillText("🚂", x, y - 14);
+
+        ctx.fillStyle = "#f6dfae";
+        ctx.font = "700 " + Math.max(13, height * 0.04) + "px Arial";
+        ctx.fillText(String(p.c), x, y - emojiSize - 10);
+      }
+    });
+  }
+
+  // Erzeugt einen kurzen "Wuff"-Ton per Web Audio API, damit die App
+  // ohne Audiodatei komplett offline funktioniert.
+  var audioCtx = null;
+
+  function getAudioContext() {
+    if (!audioCtx) {
+      var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass();
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function createNoiseBuffer(ac, duration) {
+    var length = Math.floor(ac.sampleRate * duration);
+    var buffer = ac.createBuffer(1, length, ac.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < length; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    return buffer;
+  }
+
+  function playBarkSound() {
+    var ac = getAudioContext();
+    var now = ac.currentTime;
+    var barkOffsets = [0, 0.16, 0.32];
+
+    barkOffsets.forEach(function (offset) {
+      var start = now + offset;
+      var duration = 0.13;
+
+      var noise = ac.createBufferSource();
+      noise.buffer = createNoiseBuffer(ac, duration);
+
+      var bandpass = ac.createBiquadFilter();
+      bandpass.type = "bandpass";
+      bandpass.Q.value = 1.2;
+      bandpass.frequency.setValueAtTime(700, start);
+      bandpass.frequency.exponentialRampToValueAtTime(250, start + duration);
+
+      var gain = ac.createGain();
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.9, start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+      noise.connect(bandpass);
+      bandpass.connect(gain);
+      gain.connect(ac.destination);
+
+      noise.start(start);
+      noise.stop(start + duration + 0.02);
     });
   }
 
@@ -183,6 +241,10 @@
     clicks.push(Date.now());
     saveState();
     render();
+
+    if (count % BARK_INTERVAL === 0) {
+      playBarkSound();
+    }
   }
 
   function decrement() {
