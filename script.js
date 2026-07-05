@@ -186,128 +186,16 @@
     });
   }
 
-  // Bark-Synthese per Web Audio API (keine Audiodatei noetig, funktioniert
-  // komplett offline). Ein echter Bark hat einen harten Rauschanschlag,
-  // einen tonalen Koerper aus mehreren Obertoenen und eine raue,
-  // leicht verzerrte Klangfarbe statt einer reinen Sinuswelle - das
-  // bilden wir mit Rauschen + mehreren Saegezahn-Oszillatoren durch
-  // einen Waveshaper nach.
-  var audioCtx = null;
-
-  function getAudioContext() {
-    if (!audioCtx) {
-      var AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AudioContextClass();
-    }
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    return audioCtx;
-  }
-
-  function createNoiseBuffer(ac, duration) {
-    var length = Math.floor(ac.sampleRate * duration);
-    var buffer = ac.createBuffer(1, length, ac.sampleRate);
-    var data = buffer.getChannelData(0);
-    for (var i = 0; i < length; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-    return buffer;
-  }
-
-  function createGrowlCurve(amount) {
-    var n = 4096;
-    var curve = new Float32Array(n);
-    for (var i = 0; i < n; i++) {
-      var x = (i * 2) / n - 1;
-      curve[i] = ((3 + amount) * x * 20 * (Math.PI / 180)) / (Math.PI + amount * Math.abs(x));
-    }
-    return curve;
-  }
-
-  function playSingleBark(ac, start, destination) {
-    var duration = 0.2 + Math.random() * 0.03;
-    var fundamentalStart = 380 + Math.random() * 40;
-    var fundamentalEnd = 130 + Math.random() * 20;
-
-    // Harter Rauschanschlag: das perkussive "Kchh" am Bark-Beginn
-    var attackDuration = 0.02;
-    var noise = ac.createBufferSource();
-    noise.buffer = createNoiseBuffer(ac, attackDuration);
-
-    var attackFilter = ac.createBiquadFilter();
-    attackFilter.type = "bandpass";
-    attackFilter.frequency.value = 1800;
-    attackFilter.Q.value = 0.6;
-
-    var attackGain = ac.createGain();
-    attackGain.gain.setValueAtTime(0.0001, start);
-    attackGain.gain.exponentialRampToValueAtTime(1.0, start + 0.003);
-    attackGain.gain.exponentialRampToValueAtTime(0.0001, start + attackDuration);
-
-    noise.connect(attackFilter);
-    attackFilter.connect(attackGain);
-    attackGain.connect(destination);
-    noise.start(start);
-    noise.stop(start + attackDuration + 0.01);
-
-    // Tonaler Koerper: Grundton + 2 Obertoene durch einen Waveshaper
-    // fuer die raue, knurrende Klangfarbe eines echten Barks.
-    var body = ac.createGain();
-    body.gain.setValueAtTime(0.0001, start);
-    body.gain.exponentialRampToValueAtTime(1.0, start + 0.01);
-    body.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-
-    var shaper = ac.createWaveShaper();
-    shaper.curve = createGrowlCurve(35);
-    shaper.oversample = "2x";
-
-    var formant = ac.createBiquadFilter();
-    formant.type = "lowpass";
-    formant.Q.value = 4;
-    formant.frequency.setValueAtTime(2800, start);
-    formant.frequency.exponentialRampToValueAtTime(500, start + duration);
-
-    [1, 2, 3].forEach(function (harmonic, idx) {
-      var osc = ac.createOscillator();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(fundamentalStart * harmonic, start);
-      osc.frequency.exponentialRampToValueAtTime(fundamentalEnd * harmonic, start + duration);
-
-      var harmonicGain = ac.createGain();
-      harmonicGain.gain.value = 1 / (idx + 1);
-
-      osc.connect(harmonicGain);
-      harmonicGain.connect(shaper);
-      osc.start(start);
-      osc.stop(start + duration + 0.02);
-    });
-
-    shaper.connect(formant);
-    formant.connect(body);
-    body.connect(destination);
-  }
+  // Echte Bark-Audiodatei (bark.mp3), liegt lokal neben index.html und
+  // wird bei jeder Wiedergabe frisch geklont, damit sich schnell
+  // aufeinanderfolgende Barks nicht gegenseitig abschneiden.
+  var barkAudio = new Audio("bark.mp3");
+  barkAudio.preload = "auto";
 
   function playBarkSound() {
-    var ac = getAudioContext();
-    var now = ac.currentTime;
-
-    // Kompressor haelt die Spitzen im Zaum, damit der Bark trotz
-    // hoher Lautstaerke nicht haesslich uebersteuert/clippt.
-    var compressor = ac.createDynamicsCompressor();
-    compressor.threshold.value = -14;
-    compressor.knee.value = 6;
-    compressor.ratio.value = 8;
-    compressor.attack.value = 0.002;
-    compressor.release.value = 0.15;
-
-    var outputGain = ac.createGain();
-    outputGain.gain.value = 1.6;
-
-    compressor.connect(outputGain);
-    outputGain.connect(ac.destination);
-
-    [0, 0.28].forEach(function (offset) {
-      playSingleBark(ac, now + offset, compressor);
-    });
+    var sound = barkAudio.cloneNode(true);
+    sound.volume = 1.0;
+    sound.play().catch(function () {});
   }
 
   var locomotivePopupTimer = null;
