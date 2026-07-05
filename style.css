@@ -18,7 +18,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  min-height: 100%;
   background: var(--color-black);
   color: var(--color-white);
   font-family: "Segoe UI", Arial, Helvetica, sans-serif;
@@ -80,10 +80,35 @@ html, body {
 .dashboard {
   display: grid;
   grid-template-columns: 1fr;
+  grid-template-areas:
+    "chart"
+    "counter"
+    "actions";
   gap: clamp(1.5rem, 3vw, 2.5rem);
   padding: clamp(1.5rem, 4vw, 3rem);
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .dashboard {
+    grid-template-columns: 2fr 1fr;
+    grid-template-areas:
+      "chart actions"
+      "counter counter";
+  }
+}
+
+.chart-card {
+  grid-area: chart;
+}
+
+.counter-card {
+  grid-area: counter;
+}
+
+.actions {
+  grid-area: actions;
 }
 
 .counter-card {
@@ -122,7 +147,9 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: clamp(1rem, 2vw, 1.5rem);
+  container-type: inline-size;
 }
 
 .btn {
@@ -141,9 +168,9 @@ html, body {
 
 .btn-primary {
   width: 100%;
-  max-width: 900px;
-  padding: clamp(1.5rem, 5vw, 3rem);
-  font-size: clamp(2rem, 6vw, 4.5rem);
+  max-width: 100%;
+  padding: clamp(1.2rem, 10cqw, 2.75rem);
+  font-size: clamp(1.8rem, 13cqw, 3.4rem);
   color: var(--color-cream);
   border: 3px solid var(--color-gold);
   background: linear-gradient(180deg, var(--color-green-light) 0%, var(--color-green) 60%, var(--color-green-dark) 100%);
@@ -160,9 +187,9 @@ html, body {
 
 .btn-plus5 {
   width: 100%;
-  max-width: 900px;
-  padding: clamp(1rem, 3vw, 1.75rem);
-  font-size: clamp(1.3rem, 3.5vw, 2.2rem);
+  max-width: 100%;
+  padding: clamp(0.9rem, 6cqw, 1.6rem);
+  font-size: clamp(1.2rem, 7cqw, 1.9rem);
   color: var(--color-black);
   border: 3px solid var(--color-green-dark);
   background: linear-gradient(180deg, var(--color-gold-light) 0%, var(--color-gold) 100%);
@@ -179,17 +206,17 @@ html, body {
 
 .actions-secondary {
   display: flex;
-  gap: clamp(0.75rem, 2vw, 1.5rem);
+  gap: clamp(0.75rem, 4cqw, 1.5rem);
   width: 100%;
-  max-width: 900px;
+  max-width: 100%;
 }
 
 .btn-minus,
 .btn-reset,
 .btn-cancel {
   flex: 1;
-  padding: clamp(0.9rem, 2.5vw, 1.5rem);
-  font-size: clamp(1rem, 2.5vw, 1.6rem);
+  padding: clamp(0.8rem, 5cqw, 1.4rem);
+  font-size: clamp(0.9rem, 4.5cqw, 1.4rem);
 }
 
 .btn-minus {
@@ -233,38 +260,41 @@ html, body {
 
 .locomotive-popup {
   position: fixed;
-  top: 12%;
+  top: 50%;
   left: 50%;
   z-index: 200;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: clamp(0.75rem, 2vw, 1.5rem);
-  padding: clamp(1rem, 2.5vw, 1.75rem) clamp(1.5rem, 4vw, 3rem);
+  justify-content: center;
+  gap: clamp(0.5rem, 2vw, 1.25rem);
+  padding: clamp(2rem, 6vw, 4.5rem) clamp(2.5rem, 9vw, 6rem);
   background: linear-gradient(180deg, var(--color-green-light) 0%, var(--color-green) 60%, var(--color-green-dark) 100%);
-  border: 3px solid var(--color-gold);
-  border-radius: 20px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  border: 6px solid var(--color-gold);
+  border-radius: 32px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.7);
   pointer-events: none;
   opacity: 0;
-  transform: translate(-50%, -30px) scale(0.9);
+  transform: translate(-50%, -50%) scale(0.8);
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
 .locomotive-popup.show {
   opacity: 1;
-  transform: translate(-50%, 0) scale(1);
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .locomotive-popup-emoji {
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-size: clamp(6rem, 18vw, 13rem);
   line-height: 1;
 }
 
 .locomotive-popup-text {
-  font-size: clamp(1.4rem, 3.5vw, 2.5rem);
+  font-size: clamp(3rem, 9vw, 6.5rem);
   font-weight: 800;
   color: var(--color-cream);
   white-space: nowrap;
+  text-align: center;
 }
 
 .modal-overlay {

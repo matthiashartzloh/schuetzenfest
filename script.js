@@ -80,11 +80,13 @@
     ctx.clearRect(0, 0, width, height);
 
     if (clicks.length === 0) {
+      var placeholderText = "Noch keine Daten – erster Jagdhund fehlt";
+      var placeholderSize = Math.max(16, Math.min(height * 0.06, width / (placeholderText.length * 0.55)));
       ctx.fillStyle = "#a89a7c";
-      ctx.font = "600 " + Math.max(16, height * 0.06) + "px Arial";
+      ctx.font = "600 " + placeholderSize + "px Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("Noch keine Daten – erster Jagdhund fehlt", width / 2, height / 2);
+      ctx.fillText(placeholderText, width / 2, height / 2);
       return;
     }
 
