@@ -7,6 +7,7 @@
   var counterValueEl = document.getElementById("counterValue");
   var lastDrinkEl = document.getElementById("lastDrink");
   var incrementBtn = document.getElementById("incrementBtn");
+  var incrementFiveBtn = document.getElementById("incrementFiveBtn");
   var decrementBtn = document.getElementById("decrementBtn");
   var resetBtn = document.getElementById("resetBtn");
   var confirmOverlay = document.getElementById("confirmOverlay");
@@ -61,7 +62,6 @@
   }
 
   var LOCOMOTIVE_INTERVAL = 10;
-  var BARK_INTERVAL = 25;
 
   function formatHourMinute(ts) {
     var d = new Date(ts);
@@ -183,89 +183,6 @@
     });
   }
 
-  // Erzeugt einen kurzen "Wuff"-Ton per Web Audio API, damit die App
-  // ohne Audiodatei komplett offline funktioniert.
-  var audioCtx = null;
-
-  function getAudioContext() {
-    if (!audioCtx) {
-      var AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AudioContextClass();
-    }
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    return audioCtx;
-  }
-
-  function createNoiseBuffer(ac, duration) {
-    var length = Math.floor(ac.sampleRate * duration);
-    var buffer = ac.createBuffer(1, length, ac.sampleRate);
-    var data = buffer.getChannelData(0);
-    for (var i = 0; i < length; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-    return buffer;
-  }
-
-  // Jeder "Wuff" besteht aus zwei Schichten: einem tonalen Koerper
-  // (Saegezahn mit fallender Tonhoehe durch einen Tiefpass) fuer das
-  // eigentliche "Woof" und einem kurzen Rauschimpuls fuer den harten
-  // Anschlag am Anfang. Das klingt deutlich echter als reines Rauschen.
-  function playSingleBark(ac, start) {
-    var duration = 0.17 + Math.random() * 0.02;
-    var startFreq = 300 + Math.random() * 40;
-    var endFreq = 90 + Math.random() * 15;
-
-    var osc = ac.createOscillator();
-    osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(startFreq, start);
-    osc.frequency.exponentialRampToValueAtTime(endFreq, start + duration);
-
-    var lowpass = ac.createBiquadFilter();
-    lowpass.type = "lowpass";
-    lowpass.Q.value = 3;
-    lowpass.frequency.setValueAtTime(2200, start);
-    lowpass.frequency.exponentialRampToValueAtTime(350, start + duration);
-
-    var oscGain = ac.createGain();
-    oscGain.gain.setValueAtTime(0.0001, start);
-    oscGain.gain.exponentialRampToValueAtTime(0.85, start + 0.012);
-    oscGain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-
-    osc.connect(lowpass);
-    lowpass.connect(oscGain);
-    oscGain.connect(ac.destination);
-    osc.start(start);
-    osc.stop(start + duration + 0.02);
-
-    var snapDuration = 0.025;
-    var noise = ac.createBufferSource();
-    noise.buffer = createNoiseBuffer(ac, snapDuration);
-
-    var bandpass = ac.createBiquadFilter();
-    bandpass.type = "bandpass";
-    bandpass.frequency.value = 1600;
-    bandpass.Q.value = 0.7;
-
-    var noiseGain = ac.createGain();
-    noiseGain.gain.setValueAtTime(0.0001, start);
-    noiseGain.gain.exponentialRampToValueAtTime(0.4, start + 0.004);
-    noiseGain.gain.exponentialRampToValueAtTime(0.0001, start + snapDuration);
-
-    noise.connect(bandpass);
-    bandpass.connect(noiseGain);
-    noiseGain.connect(ac.destination);
-    noise.start(start);
-    noise.stop(start + snapDuration + 0.01);
-  }
-
-  function playBarkSound() {
-    var ac = getAudioContext();
-    var now = ac.currentTime;
-    [0, 0.24].forEach(function (offset) {
-      playSingleBark(ac, now + offset);
-    });
-  }
-
   var locomotivePopupTimer = null;
 
   function showLocomotivePopup(currentCount) {
@@ -278,19 +195,28 @@
     }, 2800);
   }
 
-  function increment() {
-    count += 1;
-    clicks.push(Date.now());
+  function addJagdhunde(amount) {
+    var oldCount = count;
+    var now = Date.now();
+
+    count += amount;
+    for (var n = 0; n < amount; n++) clicks.push(now);
     saveState();
     render();
 
-    if (count % LOCOMOTIVE_INTERVAL === 0) {
-      showLocomotivePopup(count);
+    for (var i = oldCount + 1; i <= count; i++) {
+      if (i % LOCOMOTIVE_INTERVAL === 0) {
+        showLocomotivePopup(i);
+      }
     }
+  }
 
-    if (count % BARK_INTERVAL === 0) {
-      playBarkSound();
-    }
+  function increment() {
+    addJagdhunde(1);
+  }
+
+  function incrementFive() {
+    addJagdhunde(5);
   }
 
   function decrement() {
@@ -318,6 +244,7 @@
   }
 
   incrementBtn.addEventListener("click", increment);
+  incrementFiveBtn.addEventListener("click", incrementFive);
   decrementBtn.addEventListener("click", decrement);
   resetBtn.addEventListener("click", openConfirm);
   confirmResetBtn.addEventListener("click", resetAll);

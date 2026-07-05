@@ -158,6 +158,25 @@ html, body {
   box-shadow: 0 3px 0 var(--color-green-dark), 0 6px 16px rgba(0, 0, 0, 0.5);
 }
 
+.btn-plus5 {
+  width: 100%;
+  max-width: 900px;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  font-size: clamp(1.3rem, 3.5vw, 2.2rem);
+  color: var(--color-black);
+  border: 3px solid var(--color-green-dark);
+  background: linear-gradient(180deg, var(--color-gold-light) 0%, var(--color-gold) 100%);
+  box-shadow: 0 6px 0 var(--color-green-dark), 0 10px 24px rgba(0, 0, 0, 0.5);
+}
+
+.btn-plus5:hover {
+  filter: brightness(1.06);
+}
+
+.btn-plus5:active {
+  box-shadow: 0 2px 0 var(--color-green-dark), 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
 .actions-secondary {
   display: flex;
   gap: clamp(0.75rem, 2vw, 1.5rem);
@@ -208,7 +227,7 @@ html, body {
 
 .chart-canvas {
   width: 100%;
-  height: clamp(260px, 35vh, 420px);
+  height: clamp(340px, 52vh, 620px);
   display: block;
 }
 
@@ -282,19 +301,4 @@ html, body {
 .modal-actions {
   display: flex;
   gap: 1rem;
-}
-
-@media (min-width: 900px) {
-  .dashboard {
-    grid-template-columns: 1fr 1fr;
-  }
-  .counter-card {
-    grid-column: 1 / -1;
-  }
-  .actions {
-    grid-column: 1;
-  }
-  .chart-card {
-    grid-column: 2;
-  }
 }
